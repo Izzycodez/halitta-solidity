@@ -81,7 +81,7 @@ contract LotterySmartContract is VRFConsumerBaseV2{
             callbackGasLimit,
             numWords
             );
-            started == false;
+            started = false;
         }
         
         function fulfillRandomWords(
