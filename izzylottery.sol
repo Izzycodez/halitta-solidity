@@ -17,7 +17,7 @@ contract LotterySmartContract is VRFConsumerBaseV2{
     uint public amount;  //minimum of $100
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "you are not the owner!");
         _;
     }
     modifier state() {
@@ -29,12 +29,11 @@ contract LotterySmartContract is VRFConsumerBaseV2{
     mapping (uint => uint) public participantsInEachRounds;
      VRFCoordinatorV2Interface COORDINATOR;
 
-
-  uint64 s_subscriptionId;
-  address vrfCoordinator = 0x6168499c0cFfCaCD319c818142124B7A15E857ab;
-  bytes32 keyHash = 0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc;
-  uint32 callbackGasLimit = 100000;
-  uint16 requestConfirmations = 3;
+ uint64 s_subscriptionId;
+  address constant vrfCoordinator = 0x6168499c0cFfCaCD319c818142124B7A15E857ab;
+  bytes32 constant keyHash = 0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc;
+  uint32 constant callbackGasLimit = 100000;
+  uint16 constant requestConfirmations = 3;
   uint32 numWords =  2;
 
   uint256[] public s_randomWords;
@@ -46,8 +45,8 @@ contract LotterySmartContract is VRFConsumerBaseV2{
          s_subscriptionId = 5114;
         round = 1;
           COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
-          s_subscriptionId = 5114;
     }
+    
     function getPriceInEth() public state{
         AggregatorV3Interface  priceFeed  = AggregatorV3Interface(0x8A753747A1Fa494EC906cE90E9f37563A8AF630e);
         (
@@ -67,8 +66,12 @@ contract LotterySmartContract is VRFConsumerBaseV2{
         started = true;
     }
     function register() public payable state {
-        require(msg.value == amount, "required amount not met");
-        balances += address(this).balance;
+          require(msg.value >= amount, "required amount not met");
+        for(uint i = 0; i < players.length; i++){
+        require(msg.sender != players[i], "you can't register more than once!");
+         //prevents double registeration.
+        }
+        balances = address(this).balance;
         players.push(payable(msg.sender));
         numberOfPlayers =players.length;
     }
@@ -104,6 +107,14 @@ contract LotterySmartContract is VRFConsumerBaseV2{
         players = new address payable[](0);
         numberOfPlayers =players.length;
         round++;
-        winner;
+         winner= 0x0000000000000000000000000000000000000000;
     }
+    
+     receive() external payable{
+        register();
+    }
+    fallback() external payable{
+        register();
+    }
+    
 }
